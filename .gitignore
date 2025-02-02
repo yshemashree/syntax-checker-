@@ -1,32 +1,102 @@
-# Prerequisites
-*.d
+#include <iostream>
+#include <stack>
+#include <string>
+#include <cctype>
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+using namespace std;
 
-# Precompiled Headers
-*.gch
-*.pch
+// Function to check if the input code has balanced parentheses, brackets, and braces
+bool isBalanced(const string& code) {
+    stack<char> s;
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
+    for (char ch : code) {
+        // Check for opening brackets
+        if (ch == '(' || ch == '{' || ch == '[') {
+            s.push(ch);
+        }
+        // Check for closing brackets and ensure they match the last opened one
+        else if (ch == ')' || ch == '}' || ch == ']') {
+            if (s.empty()) return false; // Closing without an opening
+            char top = s.top();
+            if ((ch == ')' && top != '(') || 
+                (ch == '}' && top != '{') || 
+                (ch == ']' && top != '[')) {
+                return false; // Mismatched closing
+            }
+            s.pop();
+        }
+    }
 
-# Fortran module files
-*.mod
-*.smod
+    // If stack is not empty, there's an unmatched opening bracket
+    return s.empty();
+}
 
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
+// Function to check for missing semicolons at the end of statements
+bool checkSemicolons(const string& code) {
+    bool isInString = false;
+    bool isInChar = false;
+    bool previousCharWasLetter = false;
 
-# Executables
-*.exe
-*.out
-*.app
+    for (size_t i = 0; i < code.length(); ++i) {
+        char currentChar = code[i];
+
+        // Handle string literals
+        if (currentChar == '"' && !isInChar) {
+            isInString = !isInString;
+        }
+        // Handle character literals
+        if (currentChar == '\'' && !isInString) {
+            isInChar = !isInChar;
+        }
+
+        // If we're not in a string or char literal, we check for semicolons
+        if (!isInString && !isInChar) {
+            // A semicolon at the end of a non-letter expression is considered part of a statement
+            if (currentChar == ';' && !previousCharWasLetter) {
+                previousCharWasLetter = false;
+            } else if (isalpha(currentChar) && previousCharWasLetter == false) {
+                previousCharWasLetter = true;
+            }
+        }
+    }
+
+    // Simple check for code not ending with a semicolon
+    return previousCharWasLetter;
+}
+
+// Function to check for any basic syntax errors
+void checkSyntax(const string& code) {
+    if (!isBalanced(code)) {
+        cout << "Error: Unbalanced parentheses, brackets, or braces.\n";
+    }
+    else if (checkSemicolons(code)) {
+        cout << "Error: Missing semicolons or improper placement.\n";
+    }
+    else {
+        cout << "Code syntax appears to be valid.\n";
+    }
+}
+
+int main() {
+    string code;
+
+    cout << "Enter C++ code (type 'exit' to quit): \n";
+
+    // Read input until user types 'exit'
+    while (true) {
+        string line;
+        getline(cin, line);
+
+        // Exit the loop if the user enters 'exit'
+        if (line == "exit") {
+            break;
+        }
+
+        code += line + "\n";  // Concatenate input to form the complete code
+    }
+
+    // Call the function to check syntax
+    checkSyntax(code);
+
+    return 0;
+}
